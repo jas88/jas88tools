@@ -1,0 +1,21 @@
+watchwc - wc replacement with continuous updates
+
+Unix platforms commonly provide a tool called 'watch' which will periodically
+execute a command, allowing you to monitor the output over a period of time,
+along with 'wc' for performing word, character and line counts.
+
+One day, I found myself counting files in a directory. Easy enough:
+
+find . -type f | wc -l
+
+Each filename is shown on a line of its own - provided you have no embedded
+newlines in your filenames, which would be evil - then wc -l counts those
+lines.
+
+The one drawback is that I was running this command on a busy disk, so
+counting the 16,693 files in 7,344 directories took quite a while - with
+no visible feedback until the final answer appeared.
+
+Enter watchwc. The same four command line switches, the same output - but
+updated as it goes, so the number on screen will count up to the final result
+rather than keep you waiting.
