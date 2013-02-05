@@ -131,7 +131,7 @@ function _mssqldump_table_data($db,$table)
 				echo $row[$i];
 			}
 			else { // String, blob, other
-				echo "'".preg_replace("'","''",$row[$i])."'";
+				echo "'".str_replace("'","''",$row[$i])."'";
 			}
 			if( $i < $num_fields-1)
 				echo ",";
