@@ -1,0 +1,22 @@
+bicat - Bidirectional socket connector
+
+(c) James A Sutherland 2013
+
+Usage:
+	bicat (switches)
+	-a	Local IP address to listen on, default 0.0.0.0 (all addresses)
+	-b	Buffer size in bytes, default 4kb, maximum 16Mb
+	-p	Port number to listen on, default 443
+	-r	Remote port number to connect to, default 443
+	-s	Remote IP address to connect to
+
+The -s switch, specifying what address to connect to, is required; all others
+optional.
+
+
+Example:
+	bicat -s ssl.example.com
+	
+	Any HTTPS request (port 443) to local IP addresses will then be forwarded
+	to 'ssl.example.com'. (If that server uses name-based virtual hosts, this
+	may not have the expected results.)
