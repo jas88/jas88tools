@@ -9,8 +9,64 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 
+#include <map>
+#include <vector>
+
+
 int listenport=443,listenip=INADDR_ANY,bufsize=4096,serverip=0,serverport=443;
 char *servername=NULL;
+
+
+class Poller {
+public:
+	int poll();
+	void add(int);
+	void del(int);
+	void setmode(int,int);
+	int getstate(int);
+private:
+	std::map<int,int>	fdpos;
+	std::vector<pollfd> pollfds;
+};
+int Poller::poll() {
+	return ::poll(pollfds.data(),pollfds.size(),-1);
+}
+void Poller::add(int fd) {
+	int pollpos=pollfds.size();
+	pollfd pf;
+	pf.fd=fd;
+	fdpos.insert(std::pair<int,int>(fd,pollpos));
+	pollfds.push_back(pf);
+}
+void Poller::del(int fd) {
+	// TODO: Remove fd and consolidate
+	if (pollfds.back().fd==fd) {
+		pollfds.pop_back();
+		fdpos.erase(fd);
+		return;
+	}
+}
+void Poller::setmode(int fd,int mode) {
+	int pollpos=fdpos[fd];
+	pollfds[pollpos].events=mode;
+}
+int Poller::getstate(int fd) {
+	return pollfds[fdpos[fd]].revents;
+}
+
+class Conn {
+public:
+	Conn(Poller*,int);
+private:
+	char	*buff;
+	int		off,fd;
+};
+Conn::Conn(Poller *p,int _fd) {
+	p->add(_fd);
+	fd=_fd;
+	buff=(char*)malloc(bufsize);
+	off=0;
+}
 
 static int lsock(int port) {
     int one=1,flags;
@@ -231,7 +287,6 @@ int main(int argc,char **argv) {
 		return -1;
 	}
 	while(poll(polls,1,-1)!=-1) {
-		// TODO
 		struct sockaddr csock={0};
 		unsigned int csocksize=sizeof(csock);
 		int csockfd,ssockfd=ssock(serverport,serverip);
