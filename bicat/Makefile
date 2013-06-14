@@ -1,15 +1,15 @@
-CC		= gcc
+CC		= g++
 CFLAGS	= -Wall -pipe -O2 -ggdb
 
 BINS	:= bicat
-OBJS	:= bicat.o
+OBJS	:= bicat.o ip.o
 
 all:	$(BINS)
 
 bicat:	$(OBJS)
 	$(CC) -o $@ $<
 
-.c.o:
+.cpp.o:
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
