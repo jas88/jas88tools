@@ -20,14 +20,22 @@ initial release
 $mssqldump_version="1.01";
 $output_messages=array();
 
-if( isset($_REQUEST['action']) )
+if( isset($_REQUEST['action']) && isset($_REQUEST['mssql_database']))
 {
-	$db=sqlsrv_connect($_REQUEST['mssql_host'],array(
+	$opts=array(
 		'ReturnDatesAsStrings'	=> true,
-		'UID'					=> $_REQUEST['mssql_username'],
-		'PWD'					=> $_REQUEST['mssql_password'],
 		'Database'				=> $_REQUEST['mssql_database']
-	));
+	);
+	
+	if (isset($_REQUEST['mssql_username'])) {
+		$ops['UID']=$_REQUEST['mssql_username'];
+	}
+	
+	if (isset($_REQUEST['mssql_password'])) {
+		$ops['PWD']=$_REQUEST['mssql_password'];
+	}
+	
+	$db=sqlsrv_connect($_REQUEST['mssql_host'],$opts);
 	if (!$db) {
 		die(print_r(sqlsrv_errors(),true));
 	}
