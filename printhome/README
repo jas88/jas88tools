@@ -1,0 +1,21 @@
+A simple Apple OS X launchd.plist file which instructs launchd to launch an
+ssh tunnel to port 631 of your home system whenever port 1631 on localhost
+is used. Handy for printing to home from remote locations - but, usefully,
+also works fine from home, so no need to change configuration when you come
+and go!
+
+Just change the two bracketed parts (the unique print ID and your home
+username/hostname) and drop it into ~/Library/LaunchAgents, then you
+can print away to 127.0.0.1:1631 wherever you are, as long as you can
+SSH home.
+
+Also works for a lightweight 'VPN' to access hosts behind an SSH-capable
+firewall - change the 127.0.0.1:631 to the port you want to reach. For example,
+to reach SSH on 192.168.1.100, put 192.168.1.100:22 and change 1631 to 8022,
+then:
+
+ssh -p 8022 username@127.0.0.1
+
+Personally, I use this for printing to home from away, as well as SSHing to
+an internal system via an externally-reachable one. Plenty more possibilities
+exist.

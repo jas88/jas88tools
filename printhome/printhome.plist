@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>(enter your own unique ID here)</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/ssh</string>
+		<string>-CW</string>
+		<string>127.0.0.1:631</string>
+		<string>(home SSH username+hostname)</string>
+    </array>
+    <key>inetdCompatibility</key>
+    <dict>
+        <key>Wait</key>
+        <false/>
+    </dict>
+    <key>Sockets</key>
+    <dict>
+        <key>Listeners</key>
+        <dict>
+			<key>SockNodeName</key>
+			<string>localhost</string>
+            <key>SockServiceName</key>
+            <string>1631</string>
+            <key>SockType</key>
+            <string>stream</string>
+        </dict>
+    </dict>
+</dict>
+</plist>
