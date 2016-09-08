@@ -1,0 +1,51 @@
+Lab maintenance tools
+(c) James A Sutherland 2016
+May be reused subject to the AGPL 3.0:
+http://choosealicense.com/licenses/agpl-3.0/
+
+This collection of scripts was originally created in 2016 to automate
+maintenance of the University of Abertay Dundee's three specialist
+computer labs. While some effort is made to make the scripts versatile,
+your environment will probably require some customisation.
+
+Lab setup:
+
+All labs are in RFC1918 space, with NATted access to the outside world.
+
+Labs 2022 (Digital Forensics) and 4510 (Networking) share 10.1.0/21.
+Lab 4511 (Ethical Hacking) is on 10.0.0.0/21, with no connection to the others.
+Each lab has a server on 0.3 in the appropriate subnet as DHCP server.
+
+2022 and 4510 machines can be distinguised by IP address:
+2022 uses 10.1.5.1xx
+4510 stops at 10.1.5.20-99
+
+
+Partitions:
+Each client machine has a single 1Tb SATA hard drive, partitioned into 4:
+sda1 - 100Gb Windows 7 image (NTFS)
+sda2 -  50Gb Linux (Ubuntu 16.04 LTS) image (ext4)
+sda3 -  32Gb Linux swap partition
+sda4 - remaining space as shared data drive (NTFS, D: on Windows)
+
+Booting:
+All systems boot from the server via PXE and present a menu with four options:
+1. Windows 7
+2. Ubuntu
+3. TinyCore (network booted, used for administration)
+4. Reimage
+
+The final option, reimage, repartitions, reformats and reimages the PC without
+further user intervention. This is triggered automatically every night, and can
+also be triggered manually to recover a corrupted machine or ensure a known
+baseline for forensic work.
+
+Rather than plain PXE (DHCP+TFTP), PXELinux's HTTP support is used to load
+most of the boot time resources over HTTP from the server running nginx.
+This means the file transfer is mostly done over TCP rather than UDP, and 
+
+Status updates:
+The script status.pl can be run from cron and products an HTML status page
+indicating how long ago each PC was last booted and what mode it entered.
+
+
