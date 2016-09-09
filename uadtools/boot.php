@@ -4,7 +4,9 @@ header('Content-Type: text/plain');
 function top() { echo "DEFAULT vesamenu.c32\nTIMEOUT 50\nALLOWOPTIONS 0\nPROMPT 0\n\nMENU TITLE  Netlab Boot Menu\n\n";}
 function win() { echo "LABEL Windows\nMENU LABEL ^Windows 7 Pro\nCOM32 chain.c32\nAPPEND hd0 1\n\n"; }	
 function lin() { echo "LABEL Ubuntu\nMENU LABEL Ubuntu ^Linux 16.04 LTS\nCOM32 chain.c32\nAPPEND hd0\n\n"; }
-function tc($re=FALSE) { echo "LABEL TinyCore\nMENU LABEL ".($re?"TinyCore - ^REIMAGE THIS SYSTEM":"^TinyCore")."\nSYSAPPEND 0x3ffff\ncom32 linux.c32 tc64\nappend initrd=tc.xz ".($re?"reimage ":"")."kmap=qwerty/uk\n\n"; }
+function tc() { echo "LABEL TinyCore\nMENU LABEL ^TinyCore\nSYSAPPEND 0x3ffff\ncom32 linux.c32 tc64\nappend initrd=tc.xz kmap=qwerty/uk\n\n"; }
+function tcr() { echo "LABEL TinyCore\nMENU LABEL TinyCore - ^REIMAGE THIS SYSTEM\nSYSAPPEND 0x3ffff\ncom32 linux.c32 tc64\nappend initrd=tc.xz reimage localimage kmap=qwerty/uk\n\n"; }
+function tcl() { echo "LABEL TinyCore\nMENU LABEL TinyCore - Local reimage\nSYSAPPEND 0x3ffff\ncom32 linux.c32 tc64\nappend initrd=tc.xz reimage localimage kmap=qwerty/uk\n\n"; }
 function wincd() { "LABEL WindowsPE\nMENU LABEL Windows ^7 install disk\ncom32\nlinux.c32 wimboot\nappend initrdfile=bcd,boot.sdi,boot.wim\n\n"; }
 
 if (!isset($_GET['op'])) { $_GET['op']='menu'; }
@@ -15,7 +17,8 @@ switch($_GET['op']) {
 	win();
 	lin();
 	tc();
-	tc(TRUE);
+	tcr();
+	tcl();
 	wincd();
 	break;
 	
@@ -66,20 +69,24 @@ then
         exit
 fi
 
-		sfdisk -d /dev/sda|fgrep start|diff -q - /usr/local/etc/parts.txt||sfdisk -f /dev/sda <<EOP
-		label: dos
-		label-id: 0xcc1261e2
-		device: /dev/sda
-		unit: sectors
+if ! fgrep -q localimage /proc/cmdline
+then
+sfdisk -d /dev/sda|fgrep start|diff -q - /usr/local/etc/parts.txt||sfdisk -f /dev/sda <<EOP
+label: dos
+label-id: 0xcc1261e2
+device: /dev/sda
+unit: sectors
 
-		/dev/sda1 : start=        2048, size=   204800000, type=7, bootable
-		/dev/sda2 : start=   204802048, size=   102400000, type=83
-		/dev/sda3 : start=   307202048, size=    61440000, type=82
-		/dev/sda4 : start=   368642048, size=  1584881664, type=7
-		EOP
+/dev/sda1 : start=        2048, size=   204800000, type=7, bootable
+/dev/sda2 : start=   204802048, size=   102400000, type=83
+/dev/sda3 : start=   307202048, size=    61440000, type=82
+/dev/sda4 : start=   368642048, size=  1584881664, type=7
+EOP
+fi
 mkdir -p /mnt/sda1 /mnt/sda2 /mnt/sda3 /mnt/sda4
 dd if=/dev/zero of=/dev/sda2 bs=1M count=1
 mkfs.ext4 -b 4096 -C 4096 -L linux -E lazy_itable_init -O bigalloc,dir_index,extent,filetype,flex_bg,sparse_super,uninit_bg,has_journal,sparse_super2,ext_attr /dev/sda2
+
 mount -o noatime,nobarrier,delalloc,noinit_itable /dev/sda2 /mnt/sda2
 ntfs-3g -o noatime,big_writes /dev/sda4 /mnt/sda4 || (mkntfs -fQ -L data -I -c 4096 /dev/sda4; ntfs-3g -o noatime,big_writes /dev/sda4 /mnt/sda4)
 
