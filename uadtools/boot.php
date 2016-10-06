@@ -90,8 +90,17 @@ mkfs.ext4 -b 4096 -C 4096 -L linux -E lazy_itable_init -O bigalloc,dir_index,ext
 mount -o noatime,nobarrier,delalloc,noinit_itable /dev/sda2 /mnt/sda2
 ntfs-3g -o noatime,big_writes /dev/sda4 /mnt/sda4 || (mkntfs -fQ -L data -I -c 4096 /dev/sda4; ntfs-3g -o noatime,big_writes /dev/sda4 /mnt/sda4)
 
-udp-receiver --ttl 1 --nokbd --portbase 4510 | (cd /mnt/sda4 ; tar xf -) || udp-receiver --ttl 1 --nokbd --portbase 4510 | (cd /mnt/sda4 ; tar xf -) || true
+if ! fgrep -q localimage /proc/cmdline
+then
+if fgrep -q 1000 /sys/class/net/*/speed 2>/dev/null
+then
+udp-receiver --ttl 1 --portbase 4510 </dev/ttl| (cd /mnt/sda4 ; tar xf -)
+else
+curl http://$me/boot/boot.php?op=badspeed
 rsync -a --progress $me::labimages/ /mnt/sda4/
+fi
+fi
+
 (cd /mnt/sda2 ; pixz -d < /mnt/sda4/lin.txz | tar xf -)
 mount --bind /dev /mnt/sda2/dev
 mount --bind /proc /mnt/sda2/proc
