@@ -35,6 +35,55 @@ switch($_GET['op']) {
 	wincd();
 	break;
 	
+	case 'capture':
+$script=<<<EOS
+#!/usr/local/bin/bash
+case $1 in
+	all)
+	;;
+
+	win)
+	;;
+
+	lin)
+	;;
+
+	*)
+		echo "Usage: capture.sh (all|win|lin)"
+		exit
+	;;
+esac
+
+set -e
+mkdir -p /mnt/sda2 /mnt/sda4
+mountpoint -q /mnt/sda4 || ntfs-3g -o noatime,big_writes /dev/sda4 /mnt/sda4
+touch /mnt/sda4/$$
+if [ ! -e /mnt/sda4/$$ ]
+then
+	echo "Mount point /mnt/sda4 not writeable!"
+	exit
+fi
+rm /mnt/sda4/$$
+
+if fgrep -q win /proc/$$/cmdline || fgrep -q all /proc/$$/cmdline
+then
+	ntfscp /dev/sda1 /dev/null pagefile.sys
+	ntfsclone -so - /dev/sda1 | pixz -0 > /mnt/sda4/win.nxz
+fi
+
+if fgrep -q lin /proc/$$/cmdline || fgrep -q all /proc/$$/cmdline
+then
+	mountpoint -q /mnt/sda2 || mount /dev/sda2 /mnt/sda2
+	cd /mnt/sda2
+	tar cf - . | pixz -0 > /mnt/sda4/lin.txz
+	cd /
+	umount /mnt/sda2
+fi
+
+umount /mnt/sda4
+EOS;
+	break;
+	
 	case 'script':
 	$me=$_SERVER['SERVER_ADDR'];
 	$ip=$_SERVER['REMOTE_ADDR'];
@@ -56,6 +105,7 @@ switch($_GET['op']) {
 #reged -CI /mnt/sda1/Windows/System32/config/SYSTEM HKEY_LOCAL_MACHINE\\\\SYSTEM /tmp/system.reg || true
 #reged -CI /mnt/sda1/Users/amg/NTUSER.DAT HKEY_CURRENT_USER /tmp/user.reg || true
 echo admin:hacklab | chroot /mnt/sda2 chpasswd
+chroot /mnt/sda2 -f "Hacklab user" admin
 EOL;
 	if ($lab!=='hack') { $labspec=''; }
 	$script=<<<EOS
