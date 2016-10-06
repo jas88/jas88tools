@@ -9,9 +9,22 @@ function tcr() { echo "LABEL TinyCore\nMENU LABEL TinyCore - ^REIMAGE THIS SYSTE
 function tcl() { echo "LABEL TinyCore\nMENU LABEL TinyCore - Local reimage\nSYSAPPEND 0x3ffff\ncom32 linux.c32 tc64\nappend initrd=tc.xz reimage localimage kmap=qwerty/uk\n\n"; }
 function wincd() { "LABEL WindowsPE\nMENU LABEL Windows ^7 install disk\ncom32\nlinux.c32 wimboot\nappend initrdfile=bcd,boot.sdi,boot.wim\n\n"; }
 
+if (isset($_POST['op'])) {
+	switch($_POST['op']) {
+		case 'log':
+		move_uploaded_file($_FILES['log']['tmp_name'],'/lab/logs/pc/'.$_SERVER['REMOTE_ADDR']);
+		break;
+	}
+	exit;
+}
+
 if (!isset($_GET['op'])) { $_GET['op']='menu'; }
 
 switch($_GET['op']) {
+	case 'badspeed':
+	error_log('Bad Ethernet speed detected on '.$_SERVER['REMOTE_ADDR']."\n",3,'/lab/logs/speed');
+	break;
+	
 	case 'menu':
 	top();
 	win();
@@ -39,10 +52,10 @@ switch($_GET['op']) {
 	}
 	$labspec=<<<EOL
 # Hacklab specific bits
-reged -CI /mnt/sda1/Windows/System32/config/SOFTWARE HKEY_LOCAL_MACHINE\\SOFTWARE /tmp/software.reg || true
-reged -CI /mnt/sda1/Windows/System32/config/SYSTEM HKEY_LOCAL_MACHINE\\SYSTEM /tmp/system.reg || true
-reged -CI /mnt/sda1/Users/amg/ntuser.dat HKEY_CURRENT_USER /tmp/user.reg || true
-printf hacklab\\nhacklab\\n | chroot /mnt/sda2 passwd admin
+#reged -CI /mnt/sda1/Windows/System32/config/SOFTWARE HKEY_LOCAL_MACHINE\\\\SOFTWARE /tmp/software.reg || true
+#reged -CI /mnt/sda1/Windows/System32/config/SYSTEM HKEY_LOCAL_MACHINE\\\\SYSTEM /tmp/system.reg || true
+#reged -CI /mnt/sda1/Users/amg/NTUSER.DAT HKEY_CURRENT_USER /tmp/user.reg || true
+echo admin:hacklab | chroot /mnt/sda2 chpasswd
 EOL;
 	if ($lab!=='hack') { $labspec=''; }
 	$script=<<<EOS
@@ -53,10 +66,10 @@ $check
 
 hdparm -W1 /dev/sda
 echo 99 > /proc/sys/vm/dirty_ratio
-echo 50 > /proc/sys/vm/dirty_background_ratio
-echo 360000 > /proc/sys/vm/dirty_expire_centisecs
-echo 360000 > /proc/sys/vm/dirty_writeback_centisecs
-echo 65536 > /sys/block/sda/queue/read_ahead_kb
+echo 1 > /proc/sys/vm/dirty_background_ratio
+echo 6000 > /proc/sys/vm/dirty_expire_centisecs
+echo 100 > /proc/sys/vm/dirty_writeback_centisecs
+echo 64 > /sys/block/sda/queue/read_ahead_kb
 set -e
 swapoff -a
 mountpoint -q /mnt/sda1 && umount /mnt/sda1
@@ -111,7 +124,7 @@ ntfsresize /dev/sda1
 ntfs-3g /dev/sda1 /mnt/sda1
 cp /etc/winhosts /mnt/sda1/Windows/System32/drivers/etc/hosts
 echo \"ComputerName\"=\"$name\" >> /tmp/compname.reg
-reged -CI /mnt/sda1/Windows/System32/config/SOFTWARE HKEY_LOCAL_MACHINE\\SOFTWARE /tmp/compname.reg || true
+reged -CI /mnt/sda1/Windows/System32/config/SOFTWARE HKEY_LOCAL_MACHINE\\\\SOFTWARE /tmp/compname.reg || true
 
 $labspec
 cp /tmp/compname.exe /mnt/sda1/Windows/System32/ntname.exe
