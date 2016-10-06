@@ -49,7 +49,7 @@ case $1 in
 	;;
 
 	*)
-		echo "Usage: capture.sh (all|win|lin)"
+		echo "Usage: capture.sh (all|win|lin)" >/dev/tty
 		exit
 	;;
 esac
@@ -60,7 +60,7 @@ mountpoint -q /mnt/sda4 || ntfs-3g -o noatime,big_writes /dev/sda4 /mnt/sda4
 touch /mnt/sda4/$$
 if [ ! -e /mnt/sda4/$$ ]
 then
-	echo "Mount point /mnt/sda4 not writeable!"
+	echo "Mount point /mnt/sda4 not writeable!" >/dev/tty
 	exit
 fi
 rm /mnt/sda4/$$
@@ -68,14 +68,14 @@ rm /mnt/sda4/$$
 if fgrep -q win /proc/$$/cmdline || fgrep -q all /proc/$$/cmdline
 then
 	ntfscp /dev/sda1 /dev/null pagefile.sys
-	ntfsclone -so - /dev/sda1 | pixz -0 > /mnt/sda4/win.nxz
+	(echo win ; ntfsclone -so - /dev/sda1 | pixz -0 ) | nc $_SERVER['SERVER_ADDR'] 4541
 fi
 
 if fgrep -q lin /proc/$$/cmdline || fgrep -q all /proc/$$/cmdline
 then
 	mountpoint -q /mnt/sda2 || mount /dev/sda2 /mnt/sda2
 	cd /mnt/sda2
-	tar cf - . | pixz -0 > /mnt/sda4/lin.txz
+	(echo lin ; tar cvf - . | pixz -0 ) | nc $_SERVER['SERVER_ADDR'] 4541
 	cd /
 	umount /mnt/sda2
 fi
