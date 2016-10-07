@@ -107,7 +107,7 @@ EOS;
 #reged -CI /mnt/sda1/Windows/System32/config/SYSTEM HKEY_LOCAL_MACHINE\\\\SYSTEM /tmp/system.reg || true
 #reged -CI /mnt/sda1/Users/amg/NTUSER.DAT HKEY_CURRENT_USER /tmp/user.reg || true
 echo admin:hacklab | chroot /mnt/sda2 chpasswd
-chroot /mnt/sda2 -f "Hacklab user" admin
+chroot /mnt/sda2 chfn -f "Hacklab user" admin
 EOL;
 	if ($lab!=='hack') { $labspec=''; }
 	$script=<<<EOS
