@@ -9,10 +9,13 @@ function tcr() { echo "LABEL TinyCore\nMENU LABEL TinyCore - ^REIMAGE THIS SYSTE
 function tcl() { echo "LABEL TinyCore\nMENU LABEL TinyCore - Local reimage\nSYSAPPEND 0x3ffff\ncom32 linux.c32 tc64\nappend initrd=tc.xz reimage localimage kmap=qwerty/uk\n\n"; }
 function wincd() { "LABEL WindowsPE\nMENU LABEL Windows ^7 install disk\ncom32\nlinux.c32 wimboot\nappend initrdfile=bcd,boot.sdi,boot.wim\n\n"; }
 
+$me=$_SERVER['SERVER_ADDR'];
+$ip=$_SERVER['REMOTE_ADDR'];
+
 if (isset($_POST['op'])) {
 	switch($_POST['op']) {
 		case 'log':
-		move_uploaded_file($_FILES['log']['tmp_name'],'/lab/logs/pc/'.$_SERVER['REMOTE_ADDR']);
+		move_uploaded_file($_FILES['log']['tmp_name'],'/lab/logs/pc/'.$ip);
 		break;
 	}
 	exit;
@@ -22,7 +25,7 @@ if (!isset($_GET['op'])) { $_GET['op']='menu'; }
 
 switch($_GET['op']) {
 	case 'badspeed':
-	error_log('Bad Ethernet speed detected on '.$_SERVER['REMOTE_ADDR']."\n",3,'/lab/logs/speed');
+	error_log('Bad Ethernet speed detected on '.$ip."\n",3,'/lab/logs/speed');
 	break;
 	
 	case 'menu':
@@ -68,14 +71,14 @@ rm /mnt/sda4/$$
 if fgrep -q win /proc/$$/cmdline || fgrep -q all /proc/$$/cmdline
 then
 	ntfscp /dev/sda1 /dev/null pagefile.sys
-	(echo win ; ntfsclone -so - /dev/sda1 | pixz -0 ) | nc $_SERVER['SERVER_ADDR'] 4541
+	(echo win $ip; ntfsclone -so - /dev/sda1 | pixz -0 ) | nc $ip 4541
 fi
 
 if fgrep -q lin /proc/$$/cmdline || fgrep -q all /proc/$$/cmdline
 then
 	mountpoint -q /mnt/sda2 || mount /dev/sda2 /mnt/sda2
 	cd /mnt/sda2
-	(echo lin ; tar cvf - . | pixz -0 ) | nc $_SERVER['SERVER_ADDR'] 4541
+	(echo lin $ip; tar cvf - . | pixz -0 ) | nc $ip 4541
 	cd /
 	umount /mnt/sda2
 fi
@@ -85,8 +88,6 @@ EOS;
 	break;
 	
 	case 'script':
-	$me=$_SERVER['SERVER_ADDR'];
-	$ip=$_SERVER['REMOTE_ADDR'];
 	$lab=(substr($ip,0,5)==='10.0.')?'hack':((substr($ip,0,8)==='10.1.5.1')?'df':'net');
 	$check="dialog --pause \"Applying $lab image\" 10 40 5 || (touch /tmp/abortimage;exit 1) ||exit";
 	switch($lab) {
