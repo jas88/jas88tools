@@ -85,6 +85,7 @@ fi
 
 umount /mnt/sda4
 EOS;
+	echo $script;
 	break;
 	
 	case 'script':
