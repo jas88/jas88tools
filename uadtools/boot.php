@@ -159,7 +159,7 @@ if ! fgrep -q localimage /proc/cmdline
 then
 if fgrep -q 1000 /sys/class/net/*/speed 2>/dev/null
 then
-udp-receiver --ttl 1 --portbase 4510 </dev/ttl| (cd /mnt/sda4 ; tar xf -)
+udp-receiver --ttl 1 --portbase 4510 </dev/tty| (cd /mnt/sda4 ; tar xf -)
 else
 curl http://$me/boot/boot.php?op=badspeed
 rsync -a --progress $me::labimages/ /mnt/sda4/
