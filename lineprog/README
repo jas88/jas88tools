@@ -1,0 +1,8 @@
+Simple line-counting progress monitor
+
+Usage: lineprog n
+
+Counts incoming lines, printing the percentage. This is intended to give a progress
+indicator for tools like tar, probably to pipe to a tool like dialog:
+
+(tar cvf - . > /tmp/tar.tar) 2>&1 | ./lineprog `find .|wc -l` | dialog --gauge "Archiving data" 10 70 0

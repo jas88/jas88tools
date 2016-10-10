@@ -1,0 +1,31 @@
+diskpipe - disk-backed buffered pipe
+(c) James A Sutherland 2016
+
+Standard Unix pipes are a powerful tool for feeding the output of one tool into another. Like a physical pipe, though, you can't feed content in at one end any faster than it's coming out of the other: once a small in-memory buffer is full, the source is blocked until the destination is ready to accept more. For some situations, this is not ideal.
+
+The particular situation that inspired this development was a large MySQL backup via mysqldump. Ideally, the data would be compressed, then archived to some remote storage service such as Amazon S3:
+
+mysqldump ... | pixz -9e | s3cmd put - s3://somebucket/mysql
+
+However, once pixz has filled its initial buffer, mysqldump freezes - while holding locks on the database contents. This interferes with ordinary usage of the database for as long as it takes for pixz to finish compressing.
+
+The obvious solution to that would be a temporary file in the middle:
+
+mysqldump ... > /tmp/somefile
+pixz -9e < /tmp/somefile | s3...
+rm /tmp/somefile
+
+That works fine: mysqldump can proceed as fast as the file system can absorb data, then pixz is free to compress it much more slowly without interfering. However, this requires a LOT of disk space for the duration of the operation; on a high-performance database server with only expensive SSD storage, that may not be an option. (If buying a physical on-premises server, of course, I could just have added some cheap SATA drives for this, but virtual servers are much less flexible there: with our current provider at work, only expensive SSD storage is available.)
+
+Enter diskpipe. The input gets written out to a temporary file at full disk speed, then relayed to the output as fast as the output can accept it - but ony the *difference* in speeds needs to be stored. If pixz is able to compress the first 10Gb while mysqldump outputs 50Gb, diskpipe will only hold the "excess" 40Gb on disk.
+
+In crude ASCII art graph terms:
+
+   /-----------------|
+  /__                |
+ /   `-----____      |
+/              `---__.
+
+The conventional approach's disk usage rapidly peaks at the full size of the data set, and remains there until the operation completes (upper line). With diskpipe, the peak is lower, then falls until reaching zero at the end.
+
+(In both cases, you can get some benefit by piping via lzop before and after; it should compress the data enough to reduce disk usage, whithout slowing the source down significantly. That just shrinks the height of the graph above, though, without changing the overall relationship.)
