@@ -17,16 +17,16 @@ static ssize_t js_read(int fd,void *buff,size_t len) {
 }
 */
 
-static int js_atoi(const char *nptr) {
+static int js_atoi(int i,const char *nptr) {
 	if (*nptr>='0' && *nptr<='9') {
-		return (*nptr-'0')*10+js_atoi(nptr+1);
+		return js_atoi(i*10+((int)*nptr-(int)'0'),nptr+1);
 	}
-	return 0;
+	return i;
 }
 
-static int js_strlen(const char *s) {
-	int n=0;
-	while(*s++) {
+static size_t js_strlen(const char *s) {
+	size_t n=0;
+	while(*s++!='\0') {
 		n++;
 	}
 	return n;
@@ -36,12 +36,12 @@ static void usage(char *name) {
 	char pre[]="Usage: ",post[]=" <n>\n\tn - number of lines expected\n";
 	struct iovec bits[]={
 		{pre,sizeof(pre)-1},
-		{0},
+		{0,0},
 		{post,sizeof(post)-1}
 	};
 	bits[1].iov_base=name;
 	bits[1].iov_len=js_strlen(name);
-	writev(STDOUT_FILENO,bits,3);
+	(void)writev(STDOUT_FILENO,bits,3);
 	//fprintf(stderr,"Usage: %s",name);
 	exit(EXIT_FAILURE);
 }
@@ -59,33 +59,33 @@ static int itoa(int n,char *out,unsigned int len) {
 	do {
 		out++;
 		shifter/=10;
-	} while(shifter);
+	} while(shifter!=0);
 	*out='\0';
 	do {
-		*--out='0'+n%10;
+		*--out='0'+(char)(n%10);
 		n/=10;
-	} while(n);
+	} while(n!=0);
 	return 0;
 }
 
 int main(int argc,char **argv) {
-	char buff[4096];
-	int n,total,sofar=0,prev=0;
-	struct iovec bits[]={{buff,0},{"\r",1}};
+	char buff[4096]={0};
+	int i,n,total,sofar=0,prev=0;
+	struct iovec bits[]={{buff,0},{"%\r",2}};
 	
 	if (argc!=2) usage(*argv);
-	total=js_atoi(argv[1]);
+	total=js_atoi(0,argv[1]);
 	if (total==0) usage(*argv);
 	while((n=read(STDIN_FILENO,buff,sizeof(buff)))>0) {
-		for (int i=0;i<n;i++) {
+		for (i=0;i<n;i++) {
 			if (buff[i]=='\n') {
 				sofar++;
 			}
 		}
 		if (prev!=sofar) {
-			itoa(sofar*100/total,buff,sizeof(buff));
+			itoa(sofar*100/total,buff,(int)sizeof(buff));
 			bits[0].iov_len=js_strlen(buff);
-			writev(STDOUT_FILENO,bits,2);
+			(void)writev(STDOUT_FILENO,bits,2);
 			//printf("%d%%\r",sofar*100/total);
 			//fflush(stdout);
 			prev=sofar;
