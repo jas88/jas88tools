@@ -1,0 +1,19 @@
+atee - asynchronous tee variant
+(c) James A Sutherland 2016
+
+Functionality:
+	Read all input from a pipe into a local file, also piping that data to stdout.
+	Unlike conventional tee, do not allow the output process to block input.
+
+Original use case:
+	Distributing a compressed filesystem image via multicast, both saving and
+	unpacking to disk in the process.
+	
+	udp-receiver ... | atee /data/image.txz | xz -d | tar xf -
+	
+	Conventional tee was not ideal for this: both xz and tar can block.
+	The udp-receiver will then get blocked waiting to write, causing it to drop
+	incoming multicast packets and slowing the entire transfer session.
+	
+	Using atee instead of tee means the transfer is buffered to disk as fast as
+	possible, allowing the multicast session to proceed independently of unpacking.
